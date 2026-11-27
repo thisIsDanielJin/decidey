@@ -27,6 +27,25 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(0, 0.2, 7.2);
 
+// responsive framing: in portrait we lift the mouse so it sits above the
+// bottom control panel on phones.
+let baseY = -0.1;
+function updateLayout() {
+  const aspect = window.innerWidth / window.innerHeight;
+  const portrait = aspect < 0.82;
+  camera.aspect = aspect;
+  if (portrait) {
+    camera.position.set(0, 0, 9.5);
+    camera.lookAt(0, 0, 0);
+    baseY = 1.15;
+  } else {
+    camera.position.set(0, 0.2, 7.2);
+    camera.lookAt(0, 0, 0);
+    baseY = -0.1;
+  }
+  camera.updateProjectionMatrix();
+}
+
 /* ---------------------------- lights ----------------------------- */
 const hemi = new THREE.HemisphereLight(0xffffff, 0xffd9f0, 0.95);
 scene.add(hemi);
@@ -72,11 +91,12 @@ const eyeMat = new THREE.MeshStandardMaterial({
   roughness: 0.25,
 });
 const shineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const mouthMat = new THREE.MeshStandardMaterial({ color: 0x9a5f7a, roughness: 0.5 });
 const blushMat = new THREE.MeshStandardMaterial({
-  color: 0xff8ab8,
+  color: 0xff6fae,
   roughness: 0.7,
   transparent: true,
-  opacity: 0.55,
+  opacity: 0.6,
 });
 
 /* ---------------------------- the mouse -------------------------- */
@@ -114,14 +134,16 @@ const earL = makeEar(-1);
 const earR = makeEar(1);
 mouse.add(earL, earR);
 
-/* eyes (white shine makes them feel alive) */
+/* eyes (big, with two sparkles so they feel alive) */
 function makeEye(side) {
   const eye = new THREE.Group();
-  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.17, 28, 28), eyeMat);
-  const shine = new THREE.Mesh(new THREE.SphereGeometry(0.055, 16, 16), shineMat);
-  shine.position.set(0.06, 0.06, 0.14);
-  eye.add(ball, shine);
-  eye.position.set(side * 0.33, 0.12, 0.84);
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.2, 32, 32), eyeMat);
+  const shine = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 16), shineMat);
+  shine.position.set(0.07, 0.08, 0.16);
+  const sparkle = new THREE.Mesh(new THREE.SphereGeometry(0.032, 12, 12), shineMat);
+  sparkle.position.set(-0.06, -0.05, 0.17);
+  eye.add(ball, shine, sparkle);
+  eye.position.set(side * 0.34, 0.13, 0.82);
   return eye;
 }
 const eyeL = makeEye(-1);
@@ -134,10 +156,19 @@ nose.position.set(0, -0.3, 1.24);
 nose.scale.set(1.2, 0.9, 0.9);
 mouse.add(nose);
 
+/* smiley mouth */
+const mouth = new THREE.Mesh(
+  new THREE.TorusGeometry(0.1, 0.022, 10, 24, Math.PI),
+  mouthMat
+);
+mouth.position.set(0, -0.45, 1.19);
+mouth.rotation.z = Math.PI;
+mouse.add(mouth);
+
 /* blush cheeks */
 function makeBlush(side) {
-  const b = new THREE.Mesh(new THREE.CircleGeometry(0.17, 24), blushMat);
-  b.position.set(side * 0.55, -0.12, 0.78);
+  const b = new THREE.Mesh(new THREE.CircleGeometry(0.2, 24), blushMat);
+  b.position.set(side * 0.56, -0.1, 0.8);
   b.rotation.y = side * -0.4;
   return b;
 }
@@ -319,8 +350,8 @@ clearBtn.addEventListener("click", () => {
 /* ------------------------- render loop --------------------------- */
 function animate() {
   requestAnimationFrame(animate);
-  const t = clock.getElapsedTime();
-  const dt = clock.getDelta();
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
   phaseT += dt;
 
   // reset per-frame transforms
@@ -374,7 +405,7 @@ function animate() {
 
   if (phase !== "idle") mouse.rotation.y = spin || mouse.rotation.y;
 
-  mouse.position.y = -0.1 + lift;
+  mouse.position.y = baseY + lift;
   head.scale.set(1.05 * scaleX, 0.98 * scaleY, 0.98 * scaleZ);
   mouse.scale.set(scaleX, scaleY, scaleZ);
 
@@ -410,6 +441,7 @@ function animate() {
   renderer.render(scene, camera);
 }
 animate();
+updateLayout();
 
 /* ------------------------- confetti ------------------------------ */
 const confettiCanvas = document.getElementById("confetti");
@@ -427,12 +459,56 @@ function sizeConfetti() {
 }
 sizeConfetti();
 
-const confettiColors = ["#ff6fae", "#8a7bff", "#ffd36f", "#6fe0ff", "#9cff9c"];
+const confettiColors = ["#ff6fae", "#8a7bff", "#ffd36f", "#6fe0ff", "#9cff9c", "#ff9ecb"];
+const confettiShapes = ["rect", "circle", "heart", "star", "heart"];
+
+function drawHeart(ctx, s) {
+  const r = s * 0.5;
+  ctx.beginPath();
+  ctx.moveTo(0, r * 0.35);
+  ctx.bezierCurveTo(r, -r * 0.6, r * 0.6, -r * 1.1, 0, -r * 0.45);
+  ctx.bezierCurveTo(-r * 0.6, -r * 1.1, -r, -r * 0.6, 0, r * 0.35);
+  ctx.fill();
+}
+
+function drawStar(ctx, spikes, outer, inner) {
+  let rot = -Math.PI / 2;
+  const step = Math.PI / spikes;
+  ctx.beginPath();
+  ctx.moveTo(0, -outer);
+  for (let i = 0; i < spikes; i++) {
+    ctx.lineTo(Math.cos(rot) * outer, Math.sin(rot) * outer);
+    rot += step;
+    ctx.lineTo(Math.cos(rot) * inner, Math.sin(rot) * inner);
+    rot += step;
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawPiece(ctx, p) {
+  const s = p.size;
+  switch (p.shape) {
+    case "circle":
+      ctx.beginPath();
+      ctx.arc(0, 0, s * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    case "heart":
+      drawHeart(ctx, s);
+      break;
+    case "star":
+      drawStar(ctx, 5, s * 0.55, s * 0.26);
+      break;
+    default:
+      ctx.fillRect(-s / 2, -s / 2, s, s * 0.6);
+  }
+}
 
 function burstConfetti() {
   const cx = window.innerWidth * 0.5;
   const cy = window.innerHeight * 0.42;
-  for (let i = 0; i < 140; i++) {
+  for (let i = 0; i < 150; i++) {
     const angle = Math.random() * Math.PI * 2;
     const speed = 4 + Math.random() * 9;
     confetti.push({
@@ -440,8 +516,9 @@ function burstConfetti() {
       y: cy,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed - 4,
-      size: 5 + Math.random() * 7,
+      size: 7 + Math.random() * 9,
       color: confettiColors[(Math.random() * confettiColors.length) | 0],
+      shape: confettiShapes[(Math.random() * confettiShapes.length) | 0],
       rot: Math.random() * Math.PI,
       vr: (Math.random() - 0.5) * 0.4,
       life: 1,
@@ -465,7 +542,7 @@ function drawConfetti() {
     cctx.rotate(p.rot);
     cctx.globalAlpha = Math.max(0, p.life);
     cctx.fillStyle = p.color;
-    cctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+    drawPiece(cctx, p);
     cctx.restore();
   });
   confetti = confetti.filter((p) => p.life > 0 && p.y < window.innerHeight + 40);
@@ -474,8 +551,7 @@ drawConfetti();
 
 /* ------------------------- resize -------------------------------- */
 window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
+  updateLayout();
   renderer.setSize(window.innerWidth, window.innerHeight);
   sizeConfetti();
 });
