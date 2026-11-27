@@ -84,7 +84,8 @@ body::after {
 
 .brand h1 {
   margin: 0;
-  font-size: 2.4rem;
+  font-size: 1.9rem;
+  line-height: 1.05;
   font-weight: 700;
   letter-spacing: -0.5px;
   background: linear-gradient(120deg, var(--accent-deep), var(--accent-2));
@@ -227,7 +228,7 @@ textarea:focus {
     gap: 12px;
     background: linear-gradient(to top, rgba(255,240,250,0.9), rgba(255,240,250,0));
   }
-  .brand h1 { font-size: 2rem; }
+  .brand h1 { font-size: 1.6rem; }
   .result { margin-top: 0; }
   textarea { font-size: 16px; } /* avoid iOS zoom */
 }
