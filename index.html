@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,8 +7,8 @@
   <meta name="description" content="Ein süßes 3D-Mäuschen, das für dich entscheidet." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=2" />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css?v=3" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐭</text></svg>" />
   <script type="importmap">
     {
@@ -22,34 +22,34 @@
   <canvas id="scene"></canvas>
   <canvas id="confetti"></canvas>
 
+  <div class="lang-toggle" id="langToggle" role="group" aria-label="Sprache / 语言">
+    <button type="button" class="lang-btn" data-lang="de">DE</button>
+    <button type="button" class="lang-btn" data-lang="zh">中文</button>
+  </div>
+
   <main class="ui">
     <header class="brand">
       <h1>Entscheidungsproblem Mausi</h1>
-      <p class="tagline">Can't decide? Let the mouse squeak.</p>
+      <p class="tagline"></p>
     </header>
 
     <section class="panel">
-      <label for="options">Your options</label>
-      <textarea
-        id="options"
-        rows="5"
-        placeholder="One per line…&#10;Pizza&#10;Sushi&#10;Tacos"
-        spellcheck="false"
-      >Pizza
+      <label for="options"></label>
+      <textarea id="options" rows="5" spellcheck="false">Pizza
 Sushi
 Tacos</textarea>
 
       <div class="buttons">
-        <button id="decide" class="btn btn-primary">Decide! 🐭</button>
-        <button id="clear" class="btn btn-ghost">Clear</button>
+        <button id="decide" class="btn btn-primary"></button>
+        <button id="clear" class="btn btn-ghost"></button>
       </div>
 
-      <p id="hint" class="hint">Add at least 2 options, then poke the mouse.</p>
+      <p id="hint" class="hint"></p>
     </section>
 
     <div id="result" class="result" aria-live="polite"></div>
   </main>
 
-  <script type="module" src="./main.js?v=2"></script>
+  <script type="module" src="./main.js?v=3"></script>
 </body>
 </html>

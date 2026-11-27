@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 /* ------------------------------------------------------------------ *
- *  Decidey — a cute 3D decision mouse
+ *  Decidey: a cute 3D decision mouse
  *  Procedural mouse built from primitives so we can animate every
  *  blink, ear-wiggle, squash and tail-wag ourselves.
  * ------------------------------------------------------------------ */
@@ -109,7 +109,7 @@ head.scale.set(1.05, 0.98, 0.98);
 head.castShadow = true;
 mouse.add(head);
 
-/* snout — slightly pushed forward lower sphere */
+/* snout, slightly pushed forward lower sphere */
 const snout = new THREE.Mesh(new THREE.SphereGeometry(0.52, 36, 36), furMat);
 snout.position.set(0, -0.26, 0.74);
 snout.scale.set(1, 0.82, 0.9);
@@ -191,7 +191,7 @@ mouse.add(
   makeWhisker(1, -0.28, 0.14), makeWhisker(1, -0.34, 0)
 );
 
-/* tail — a curvy tube that wags */
+/* tail, a curvy tube that wags */
 const tailCurve = new THREE.CatmullRomCurve3([
   new THREE.Vector3(0, -0.7, -0.9),
   new THREE.Vector3(0.1, -1.15, -1.3),
@@ -248,6 +248,80 @@ const clearBtn = document.getElementById("clear");
 const hintEl = document.getElementById("hint");
 const resultEl = document.getElementById("result");
 
+/* ------------------------- i18n (de / zh) ------------------------ */
+const I18N = {
+  de: {
+    tagline: "Kannst du dich nicht entscheiden? Lass die Mausi quietschen.",
+    optionsLabel: "Deine Optionen",
+    placeholder: "Eine pro Zeile\u2026\nPizza\nSushi\nTacos",
+    decide: "Entscheide! \uD83D\uDC2D",
+    clear: "L\u00f6schen",
+    hintDefault: "Mindestens 2 Optionen eingeben, dann die Maus antippen.",
+    hintNeedTwo: "Gib mir mindestens 2 Optionen zur Auswahl \uD83D\uDC2D",
+    hintThinking: "Denkt ganz doll nach\u2026",
+    hintAgain: "Tippe die Maus an (oder \u201eEntscheide\u201c), um nochmal zu w\u00fcrfeln.",
+    thinkingLabel: "hmm\u2026",
+    verdictLabel: "die Mausi hat entschieden",
+  },
+  zh: {
+    tagline: "\u62ff\u4e0d\u5b9a\u4e3b\u610f\uff1f\u8ba9\u5c0f\u8001\u9f20\u5e2e\u4f60\u5410\u4e00\u58f0\u3002",
+    optionsLabel: "\u4f60\u7684\u9009\u9879",
+    placeholder: "\u6bcf\u884c\u4e00\u4e2a\u2026\n\u62ab\u8428\n\u5bff\u53f8\n\u5854\u53ef",
+    decide: "\u51b3\u5b9a\u5427\uff01\uD83D\uDC2D",
+    clear: "\u6e05\u7a7a",
+    hintDefault: "\u81f3\u5c11\u8f93\u5165 2 \u4e2a\u9009\u9879\uff0c\u7136\u540e\u6233\u4e00\u4e0b\u5c0f\u8001\u9f20\u3002",
+    hintNeedTwo: "\u81f3\u5c11\u7ed9\u6211 2 \u4e2a\u9009\u9879\u6765\u6311 \uD83D\uDC2D",
+    hintThinking: "\u6b63\u5728\u52aa\u529b\u601d\u8003\u2026",
+    hintAgain: "\u6233\u4e00\u4e0b\u5c0f\u8001\u9f20\uff08\u6216\u70b9\u201c\u51b3\u5b9a\u201d\uff09\u518d\u6765\u4e00\u6b21\u3002",
+    thinkingLabel: "\u55ef\u2026",
+    verdictLabel: "\u5c0f\u8001\u9f20\u51b3\u5b9a\u4e86",
+  },
+};
+let lang = localStorage.getItem("mausi-lang") === "zh" ? "zh" : "de";
+let hintState = "default";
+const t = (k) => (I18N[lang] || I18N.de)[k];
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+function setHint(state) {
+  hintState = state;
+  hintEl.textContent = t("hint" + cap(state));
+  hintEl.style.color = state === "needTwo" ? "var(--accent-deep)" : "";
+}
+
+function renderVerdict() {
+  resultEl.innerHTML =
+    `<div class="card"><div class="verdict-label">${t("verdictLabel")}</div>` +
+    `<div class="verdict">${escapeHtml(finalWinner)} \u2728</div></div>`;
+}
+
+function applyLang() {
+  document.documentElement.lang = lang === "zh" ? "zh-CN" : "de";
+  document.querySelector(".tagline").textContent = t("tagline");
+  document.querySelector('label[for="options"]').textContent = t("optionsLabel");
+  optionsEl.setAttribute("placeholder", t("placeholder"));
+  decideBtn.textContent = t("decide");
+  clearBtn.textContent = t("clear");
+  setHint(hintState);
+  if (
+    resultEl.classList.contains("show") &&
+    !resultEl.classList.contains("thinking") &&
+    finalWinner
+  ) {
+    renderVerdict();
+  }
+  document.querySelectorAll(".lang-btn").forEach((b) =>
+    b.classList.toggle("active", b.dataset.lang === lang)
+  );
+}
+
+document.getElementById("langToggle").addEventListener("click", (e) => {
+  const btn = e.target.closest(".lang-btn");
+  if (!btn) return;
+  lang = btn.dataset.lang;
+  localStorage.setItem("mausi-lang", lang);
+  applyLang();
+});
+
 function getOptions() {
   return optionsEl.value
     .split("\n")
@@ -268,13 +342,11 @@ function decide() {
   if (phase !== "idle") return;
   const opts = getOptions();
   if (opts.length < 2) {
-    hintEl.textContent = "Give me at least 2 options to choose from 🐭";
-    hintEl.style.color = "var(--accent-deep)";
+    setHint("needTwo");
     nudgePanelShake();
     return;
   }
-  hintEl.style.color = "";
-  hintEl.textContent = "Thinking really hard…";
+  setHint("thinking");
   decideBtn.disabled = true;
 
   finalWinner = opts[secureRandomInt(opts.length)];
@@ -289,7 +361,7 @@ function decide() {
   const scroll = () => {
     resultEl.innerHTML = `
       <div class="card">
-        <div class="verdict-label">hmm…</div>
+        <div class="verdict-label">${t("thinkingLabel")}</div>
         <div class="verdict">${escapeHtml(opts[i % opts.length])}</div>
       </div>`;
     i++;
@@ -307,12 +379,8 @@ function reveal() {
   phaseT = 0;
   squashPop = 1;
   resultEl.classList.remove("thinking");
-  resultEl.innerHTML = `
-    <div class="card">
-      <div class="verdict-label">the mouse has decided</div>
-      <div class="verdict">${escapeHtml(finalWinner)} ✨</div>
-    </div>`;
-  hintEl.textContent = "Poke the mouse (or hit Decide) to go again.";
+  renderVerdict();
+  setHint("again");
   decideBtn.disabled = false;
   burstConfetti();
 }
@@ -342,8 +410,8 @@ clearBtn.addEventListener("click", () => {
   optionsEl.value = "";
   resultEl.classList.remove("show", "thinking");
   resultEl.innerHTML = "";
-  hintEl.style.color = "";
-  hintEl.textContent = "Add at least 2 options, then poke the mouse.";
+  finalWinner = null;
+  setHint("default");
   optionsEl.focus();
 });
 
@@ -395,7 +463,7 @@ function animate() {
     if (phaseT > 0.9) { phase = "idle"; }
   }
 
-  // squash "pop" impulse (big overshoot then settle) — happens on reveal
+  // squash "pop" impulse (big overshoot then settle), happens on reveal
   if (squashPop > 0) {
     const p = squashPop;
     scaleY *= 1 + Math.sin(p * Math.PI) * 0.35;
@@ -442,6 +510,7 @@ function animate() {
 }
 animate();
 updateLayout();
+applyLang();
 
 /* ------------------------- confetti ------------------------------ */
 const confettiCanvas = document.getElementById("confetti");
