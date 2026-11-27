@@ -222,13 +222,19 @@ textarea:focus {
 @media (max-width: 720px) {
   .ui {
     width: 100%;
-    height: auto;
-    bottom: 0; top: auto;
-    padding: 16px;
-    gap: 12px;
-    background: linear-gradient(to top, rgba(255,240,250,0.9), rgba(255,240,250,0));
+    height: 100%;
+    inset: 0;
+    top: 0;
+    bottom: auto;
+    padding: 18px 16px calc(16px + env(safe-area-inset-bottom));
+    gap: 10px;
+    justify-content: flex-start;
+    background: none;
   }
   .brand h1 { font-size: 1.6rem; }
-  .result { margin-top: 0; }
-  textarea { font-size: 16px; } /* avoid iOS zoom */
+  .tagline { font-size: 0.9rem; }
+  .panel { margin-top: auto; }
+  textarea { font-size: 16px; height: 92px; } /* shorter + avoid iOS zoom */
+  .result { margin-top: 10px; }
+  .result .verdict { font-size: 1.5rem; }
 }
