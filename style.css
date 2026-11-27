@@ -15,10 +15,47 @@ html, body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  font-family: "Fredoka", system-ui, sans-serif;
+  font-family: "Fredoka", "Noto Sans SC", system-ui, sans-serif;
   color: var(--ink);
   background:
     radial-gradient(130% 120% at 15% 10%, #fff2fb 0%, #ffe3f4 32%, #e7ddff 66%, #d6e9ff 100%);
+}
+
+/* language toggle (top-right) */
+.lang-toggle {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 6;
+  display: flex;
+  gap: 3px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1.5px solid var(--card-border);
+  box-shadow: 0 10px 26px -14px rgba(90, 60, 120, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.lang-btn {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--ink-soft);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 13px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, transform 0.12s;
+}
+.lang-btn:hover { color: var(--ink); }
+.lang-btn:active { transform: scale(0.95); }
+.lang-btn.active {
+  color: #fff;
+  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  box-shadow: 0 6px 14px -6px rgba(226, 78, 146, 0.7);
 }
 
 /* soft floating blobs behind everything */
@@ -232,6 +269,7 @@ textarea:focus {
     background: none;
   }
   .brand h1 { font-size: 1.6rem; }
+  .brand { padding-right: 92px; } /* keep title clear of the toggle */
   .tagline { font-size: 0.9rem; }
   .panel { margin-top: auto; }
   textarea { font-size: 16px; height: 92px; } /* shorter + avoid iOS zoom */
